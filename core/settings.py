@@ -23,6 +23,8 @@ CHANNELS_ALLOWED_ORIGINS = env.list("CHANNELS_ALLOWED_ORIGINS")
 
 SITE_ID = 1
 
+TAXES=env('TAXES')
+
 
 # Application definition
 
@@ -40,6 +42,11 @@ PROJECT_APPS = [
     'apps.authentication',
     'apps.assets',
     'apps.user_profile',
+    'apps.products',
+    'apps.cart',
+    'apps.wishlist',
+    'apps.addresses',
+    'apps.orders',
 ]
 
 THIRD_PARTY_APPS = [
@@ -49,17 +56,22 @@ THIRD_PARTY_APPS = [
     'channels',
     'ckeditor',
     'ckeditor_uploader',
+    'django_celery_results',
+    'django_celery_beat',
     'djoser',
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     'axes',
-    'storages'
+    'storages',
+    'smart_selects'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 
 CKEDITOR_CONFIGS = {"default": {"toolbar": "full", "autoParagraph": False}}
 CKEDITOR_UPLOAD_PATH = "media/"
+
+SMART_SELECTS_ADMIN_USING_JQUERY = True
 
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = lambda request: timedelta(minutes=5)
@@ -75,6 +87,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
+    'apps.products.middleware.ImpressionMiddleware',
+    'apps.products.middleware.IncrementViewCountMiddleware',
+    "apps.products.middleware.CategoryListImpressionMiddleware",
+    "apps.products.middleware.CategoryDetailImpressionMiddleware",
     # AxesMiddleware should be the last middleware in the MIDDLEWARE list.
     # It only formats user lockout messages and renders Axes lockout responses
     # on failed user authentication attempts from login views.
@@ -82,6 +98,24 @@ MIDDLEWARE = [
     # you can skip installing the middleware and use your own views.
     'axes.middleware.AxesMiddleware',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        # Ajusta el path al módulo donde esté tu middleware
+        'apps.products.middleware': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 ROOT_URLCONF = 'core.urls'
 
@@ -230,6 +264,7 @@ CHANNEL_LAYERS = {
     }
 }
 
+REDIS_HOST = env("REDIS_HOST")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -241,6 +276,29 @@ CACHES = {
 }
 
 CHANNELS_ALLOWED_ORIGINS = env("CHANNELS_ALLOWED_ORIGINS")
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "America/Lima"
+
+CELERY_BROKER_URL = env("REDIS_URL")
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'visibility_timeout': 3600,
+    'socket_timeout': 5,
+    'retry_on_timeout': True
+}
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
+
+CELERY_IMPORTS = (
+    'core.tasks',
+    'apps.products.tasks'
+)
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {}
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 

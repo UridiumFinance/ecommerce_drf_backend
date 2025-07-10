@@ -5,6 +5,9 @@ django-redis==5.4.0
 django-environ==0.9.0
 django-ckeditor==6.3.2
 django-cors-headers==4.6.0
+django-countries==7.6.1
+django-smart-selects==1.7.2
+
 
 beautifulsoup4==4.12.3
 bleach==6.2.0
@@ -27,6 +30,10 @@ argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
 djangorestframework-simplejwt==5.3.1
 
+celery==5.4.0
+django-celery-results==2.5.1
+django-celery-beat==2.7.0
+
 django-storages==1.14.4
 boto3==1.35.15
 botocore==1.35.15
@@ -34,3 +41,5 @@ cryptography==41.0.7
 rsa==4.9
 
 django-axes==7.0.0
+
+Faker==33.0.0

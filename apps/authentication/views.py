@@ -271,17 +271,21 @@ class VerifyOTPLoginView(StandardAPIView):
     permission_classes = [HasValidAPIKey]
 
     def post(self, request):
-        email = request.data.get('email')
-        otp_code = request.data.get('otp')
+        data      = request.data
+        email     = data.get('email')
+        otp_code  = data.get('otp') or data.get('otp_code')
 
         if not email or not otp_code:
-            return self.error("Both email and OTP code are required.")
+            return self.error("Se requieren email y código OTP.")
 
         # Verificar que existe un usuario con ese email y que esta activo
         try:
             user = User.objects.get(email=email, is_active=True)
         except User.DoesNotExist:
-            return self.error("User does not exist or is not active.")
+            return self.error("Usuario inexistente o inactivo.")
+        
+        if not user.otp_secret:
+            return self.error("No existe secreto OTP para este usuario.")
         
         # Generar OTP
         totp = pyotp.TOTP(user.otp_secret)

@@ -23,7 +23,7 @@ class UserAccountAdmin(UserAdmin):
 
     # Campos a mostrar en el formulario de edición
     fieldsets = (
-        (None, {'fields': ('email', 'username', 'password', 'verified', 'role')}),
+        (None, {'fields': ('id','email', 'username', 'password', 'verified', 'role')}),
         ('Personal Info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important Dates', {'fields': ('last_login', 'created_at', 'updated_at')}),
@@ -39,7 +39,7 @@ class UserAccountAdmin(UserAdmin):
 
     search_fields = ('id', 'email', 'username', 'first_name', 'last_name')
     ordering = ('email',)
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at', 'id',)
     list_editable = ('role','verified',)
 
 admin.site.register(UserAccount, UserAccountAdmin)

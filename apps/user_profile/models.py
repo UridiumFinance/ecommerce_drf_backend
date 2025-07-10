@@ -71,29 +71,35 @@ class UserProfile(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     """
     Crea un perfil de usuario automáticamente cuando se crea un usuario.
+    Reutiliza imágenes predefinidas si ya existen.
     """
     if created:
         profile = UserProfile.objects.create(user=instance)
-        profile_picture = Media.objects.get_or_create(
+
+        # Buscar o crear imagen de perfil
+        profile_picture, _ = Media.objects.get_or_create(
             key="media/profiles/default/user_default_profile.png",
             defaults={
                 "order": 1,
                 "name": "user_default_profile.png",
-                "size": "36.5 KB",
-                "type": "png",
+                "size": "2.3 KB",
+                "type": "image/png",  # usar MIME type completo
                 "media_type": "image",
-            },
+            }
         )
+
+        # Buscar o crear imagen de banner
         banner_picture, _ = Media.objects.get_or_create(
             key="media/profiles/default/user_default_banner.jpg",
             defaults={
                 "order": 1,
                 "name": "user_default_bg.jpg",
-                "size": "49.9 KB",
-                "type": "jpg",
+                "size": "200.5 KB",
+                "type": "image/jpeg",  # usar MIME type completo
                 "media_type": "image",
-            },
+            }
         )
+
         profile.profile_picture = profile_picture
         profile.banner_picture = banner_picture
         profile.save()
