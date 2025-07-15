@@ -20,7 +20,8 @@ class CategoryNestedSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.thumbnail:
-            return MediaSerializer(obj.thumbnail).data.get('url')
+            # Propaga self.context (incluye expires_in si lo definiste)
+            return MediaSerializer(obj.thumbnail, context=self.context).data.get('url')
         return None
     
 
@@ -56,7 +57,7 @@ class CategorySerializer(serializers.ModelSerializer):
     
     def get_thumbnail(self, obj):
         if obj.thumbnail:
-            return MediaSerializer(obj.thumbnail).data.get("url")
+            return MediaSerializer(obj.thumbnail, context=self.context).data.get('url')
         return None
     
     def get_related_categories(self, obj):
@@ -220,9 +221,10 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         image = obj.get_first_image()
-        if image:
-            return MediaSerializer(image).data.get("url")
-        return None
+        if not image:
+            return None
+        # aquí ponemos 1 hora (3600 s)
+        return MediaSerializer(obj.thumbnail, context=self.context).data.get('url')
     
     def get_min_price(self, obj):
         total = obj.price or Decimal('0.00')
@@ -247,8 +249,8 @@ class ProductSerializer(serializers.ModelSerializer):
     weights   = WeightSerializer(many=True, required=False)
     flavors   = FlavorSerializer(many=True, required=False)
 
-    images     = serializers.SerializerMethodField()
     thumbnail  = serializers.SerializerMethodField()
+    images     = serializers.SerializerMethodField()
     has_liked  = serializers.SerializerMethodField()
 
     average_rating = serializers.FloatField(source='analytics_avg_rating', read_only=True)
@@ -280,9 +282,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         image = obj.get_first_image()
-        if image:
-            return MediaSerializer(image).data.get("url")
-        return None
+        if not image:
+            return None
+        ctx = { **self.context, 'expires_in': 60 * 60 * 24 }
+
+        # 3) pasamos la instancia correcta y el context
+        return MediaSerializer(image, context=ctx).data['url']
+
+    def get_images(self, obj):
+        urls = []
+        # aquí ponemos None → sin expiración / sin firma
+        ctx = {**self.context, 'expires_in': 3600}
+        for image in obj.images.all():
+            if not getattr(image, 'key', None):
+                continue
+            urls.append(MediaSerializer(image, context=ctx).data['url'])
+        return urls
 
     def get_has_liked(self, obj):
         request = self.context.get("request")
@@ -302,13 +317,6 @@ class ProductSerializer(serializers.ModelSerializer):
             filter_kwargs["session_id"] = session_id
 
         return ProductInteraction.objects.filter(**filter_kwargs).exists()
-
-    def get_images(self, obj):
-        return [
-            MediaSerializer(image).data.get("url")
-            for image in obj.images.all()
-            if getattr(image, 'key', None)
-        ]
     
     def get_price_with_selected(self, obj):
         # Extrae dict de atributos seleccionados desde el contexto

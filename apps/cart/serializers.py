@@ -105,8 +105,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     # Escritura variantes y cupón por ítem
     content_type = serializers.SlugRelatedField(
         slug_field='model',
-        queryset=ContentType.objects.filter(model__in=('product','course')),
-        write_only=True
+        queryset=ContentType.objects.filter(model__in=('product','course'))
     )
     object_id   = serializers.UUIDField(write_only=True)
     size_id     = serializers.PrimaryKeyRelatedField(
@@ -333,3 +332,41 @@ class CartSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         instance.recalc_shipping()
         return instance
+    
+
+class CouponSerializer(serializers.ModelSerializer):
+    """
+    Serializer para exponer la información de un cupón,
+    incluyendo un campo is_active calculado.
+    """
+    # Para devolver la lista de códigos de país tal cual
+    countries = serializers.ListField(
+        child=serializers.CharField(),
+        allow_empty=True
+    )
+    # Campo extra para indicar si el cupón está vigente en este momento
+    is_active = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Coupon
+        fields = [
+            'id',
+            'code',
+            'description',
+            'coupon_type',
+            'discount_value',
+            'valid_from',
+            'valid_to',
+            'active',
+            'max_uses',
+            'per_user_limit',
+            'min_subtotal',
+            'max_subtotal',
+            'countries',
+            'uses_count',
+            'is_active',
+        ]
+        read_only_fields = fields  # si quieres que sea solo lectura en la API
+
+    def get_is_active(self, obj):
+        return obj.is_active()

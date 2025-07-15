@@ -11,6 +11,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 SECRET_KEY = env("SECRET_KEY")
+STRIPE_SECRET_API_KEY = env("STRIPE_SECRET_API_KEY")
 VALID_API_KEYS = env.str("VALID_API_KEYS").split(",")
 
 # SECURITY WARNING: don't run with debug turned on in production!

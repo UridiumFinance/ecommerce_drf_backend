@@ -13,10 +13,9 @@ class Wishlist(models.Model):
     Lista de deseos de un usuario.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        unique=True,
         related_name='wishlist'
     )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)

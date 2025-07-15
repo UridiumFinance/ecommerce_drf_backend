@@ -43,3 +43,5 @@ rsa==4.9
 django-axes==7.0.0
 
 Faker==33.0.0
+
+stripe==12.3.0

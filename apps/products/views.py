@@ -220,7 +220,6 @@ class ProductStockView(StandardAPIView):
         product = get_object_or_404(Product, slug=slug)
         return self.response(product.total_stock)
 
-
 class ProductPriceView(StandardAPIView):
     permission_classes = [HasValidAPIKey]
 
@@ -231,7 +230,7 @@ class ProductPriceView(StandardAPIView):
 
         product = get_object_or_404(Product, slug=slug)
 
-        # 1) Recogemos atributos válidos
+        # 1) Recogemos atributos válidos...
         selected = {}
         for param, rel in (
             ("color_id", "colors"),
@@ -248,7 +247,7 @@ class ProductPriceView(StandardAPIView):
                 except (ValueError, getattr(product, rel).model.DoesNotExist):
                     continue
 
-        # 2) Precio base (producto.price) + atributos
+        # 2) Precio base + atributos
         price_with_attrs = product.get_price_with_selected(selected)
 
         # 3) Precio antiguo + atributos
@@ -256,22 +255,22 @@ class ProductPriceView(StandardAPIView):
         attrs_extra = sum((attr.price or 0) for attr in selected.values())
         old_price_with_attrs = compare_base + attrs_extra
 
-        # 4) Determinamos si el descuento está activo
+        # 4) ¿Está todavía activo el descuento?
         now = timezone.now()
         is_on_discount = (
-            product.discount
-            and product.compare_price is not None
+            product.compare_price is not None
             and product.discount_until
             and now < product.discount_until
         )
 
-        # 5) Construimos la respuesta
+        # 5) Construimos la respuesta siempre con compare_price + bandera
         data = {
             "price": price_with_attrs,
-            # Sólo enviamos compare_price si hay descuento activo
-            "compare_price": old_price_with_attrs if is_on_discount else None,
+            "compare_price": old_price_with_attrs,
+            "discount_active": bool(is_on_discount)
         }
         return self.response(data)
+
     
 
 class UpdateProductAnalyticsView(StandardAPIView):

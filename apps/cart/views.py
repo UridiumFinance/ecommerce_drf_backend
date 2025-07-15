@@ -368,7 +368,7 @@ class PreviewCartCalculationView(StandardAPIView):
         total = sub_after + tax_amount + (Decimal('0') if free_ship else delivery_fee)
 
         return Response({
-            'items': preview,
+            # 'items': preview,
             'subtotal_before': str(sub_before.quantize(Decimal('0.01'))),
             'subtotal_after': str(sub_after.quantize(Decimal('0.01'))),
             'item_discounts': str((sub_before - sub_after).quantize(Decimal('0.01'))),
@@ -456,3 +456,62 @@ class ShippingOptionsView(StandardAPIView):
         methods = ShippingMethod.objects.filter(zone__in=zones, active=True)
         serializer = ShippingMethodSerializer(methods, many=True)
         return Response(serializer.data)
+
+
+class CalculateDefaultShippingView(StandardAPIView):
+    """
+    GET /cart/shipping/default/
+    Asigna la dirección por defecto del usuario y recalcula el costo de envío.
+    Opcionalmente el cliente puede pasar 'shipping_method_code' para elegir método.
+    """
+    permission_classes = [HasValidAPIKey, permissions.IsAuthenticated]
+
+    def get(self, request):
+        # 1. Obtener carrito
+        cart = Cart.objects.get(user=request.user.id)
+
+        # 2. Obtener dirección por defecto
+        default_addr = ShippingAddress.objects.filter(
+            user=request.user, is_default=True
+        ).first()
+        if not default_addr:
+            return self.response(
+                {"detail": "No hay dirección por defecto configurada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 3. Asignar al carrito y guardar
+        cart.shipping_address = default_addr
+        cart.save(update_fields=['shipping_address'])
+
+        # 4. (Opcional) seleccionar método de envío
+        method_code = request.data.get('shipping_method_code')
+        if method_code:
+            # buscar método activo para la zona de la dirección
+            zone = ShippingZone.objects.filter(
+                countries__contains=[default_addr.country.code]
+            ).first()
+            if not zone:
+                return self.response(
+                    {"detail": "No existe zona de envío para ese país."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            method = ShippingMethod.objects.filter(
+                zone=zone, code=method_code, active=True
+            ).first()
+            if not method:
+                return self.response(
+                    {"detail": f"Método '{method_code}' no válido para la zona."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            cart.shipping_method = method
+            cart.save(update_fields=['shipping_method'])
+
+        # 5. Recalcular costo de envío
+        cart.recalc_shipping()
+
+        return self.response({
+            "shipping_address": str(default_addr),
+            "shipping_method": cart.shipping_method.code if cart.shipping_method else None,
+            "shipping_cost": str(cart.shipping_cost)
+        }, status=status.HTTP_200_OK)

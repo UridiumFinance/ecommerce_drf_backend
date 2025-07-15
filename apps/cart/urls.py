@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     ListCartView, AddCartItemView, UpdateCartItemView,
     RemoveCartItemView, ClearCartView, PreviewCartCalculationView,
-    SyncCartView, ShippingOptionsView
+    SyncCartView, ShippingOptionsView, CalculateDefaultShippingView
 )
 
 urlpatterns = [
@@ -15,4 +15,9 @@ urlpatterns = [
     path('total/', PreviewCartCalculationView.as_view()),
     path('sync/', SyncCartView.as_view()),
     path('shipping-options/', ShippingOptionsView.as_view()),
+    path(
+        'shipping/default/',
+        CalculateDefaultShippingView.as_view(),
+        name='cart-calc-default-shipping'
+    ),
 ]
