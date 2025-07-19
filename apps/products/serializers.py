@@ -9,6 +9,7 @@ from .models import (
     Color, Size, Material, Weight, Flavor,
     Category, CategoryInteraction, CategoryAnalytics
 )
+from apps.reviews.serializers import ReviewSerializer
 
 class CategoryNestedSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField()
@@ -255,6 +256,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     average_rating = serializers.FloatField(source='analytics_avg_rating', read_only=True)
     review_count   = serializers.IntegerField(source='analytics_review_count', read_only=True)
+    # reviews = serializers.SerializerMethodField()
 
     category     = CategorySerializer(read_only=True)
     sub_category = CategorySerializer(read_only=True)
@@ -262,6 +264,7 @@ class ProductSerializer(serializers.ModelSerializer):
     
     # Override stock to reflect sum of attribute stocks
     stock = serializers.IntegerField(source='total_stock', read_only=True)
+
 
     price_with_all_attributes = serializers.DecimalField(
         max_digits=12,
@@ -322,6 +325,13 @@ class ProductSerializer(serializers.ModelSerializer):
         # Extrae dict de atributos seleccionados desde el contexto
         selected = self.context.get('selected_attributes', {}) or {}
         return obj.get_price_with_selected(selected)
+    
+    # def get_reviews(self, obj):
+    #     """
+    #     Devuelve las reseñas activas, ordenadas por created_at desc.
+    #     """
+    #     qs = obj.reviews.filter(is_active=True).order_by('-created_at')
+    #     return ReviewSerializer(qs, many=True, context=self.context).data
 
 
 class ProductWithMetricsSerializer(ProductSerializer):

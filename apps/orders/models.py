@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from apps.cart.models import ShippingMethod, Coupon
 from apps.addresses.models import ShippingAddress
@@ -92,6 +93,9 @@ class OrderItem(models.Model):
                                         on_delete=models.PROTECT)
     object_id       = models.UUIDField()
     item_name       = models.CharField(max_length=255)
+
+    item            = GenericForeignKey('content_type', 'object_id')
+    
     unit_price      = models.DecimalField(max_digits=10,
                                           decimal_places=2)
     quantity        = models.PositiveIntegerField(default=1)

@@ -10,7 +10,7 @@ from django.contrib import admin
 
 from apps.assets.models import Media
 from utils.s3_utils import get_cloudfront_signed_url
-
+from apps.reviews.models import Reviewable
 
 User = settings.AUTH_USER_MODEL
 
@@ -174,7 +174,7 @@ class CategoryAnalytics(models.Model):
                 update_func()
 
 
-class Product(models.Model):
+class Product(Reviewable, models.Model):
     # --- Identificación básica ---
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.UUIDField(default=uuid.uuid4, editable=False)

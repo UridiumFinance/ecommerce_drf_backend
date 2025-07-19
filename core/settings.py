@@ -48,6 +48,8 @@ PROJECT_APPS = [
     'apps.wishlist',
     'apps.addresses',
     'apps.orders',
+    'apps.reviews',
+    'apps.newsletter'
 ]
 
 THIRD_PARTY_APPS = [
