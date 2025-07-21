@@ -49,7 +49,8 @@ PROJECT_APPS = [
     'apps.addresses',
     'apps.orders',
     'apps.reviews',
-    'apps.newsletter'
+    'apps.newsletter',
+    'apps.complaints',
 ]
 
 THIRD_PARTY_APPS = [

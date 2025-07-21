@@ -76,5 +76,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
             'items',
+            'tracking_number',
+            'tracking_url',
         ]
         read_only_fields = fields

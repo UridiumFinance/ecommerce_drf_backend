@@ -10,13 +10,16 @@ from apps.addresses.models import ShippingAddress
 class Order(models.Model):
     PENDING   = 'pending'
     PAID      = 'paid'
-    FULFILLED = 'fulfilled'
+    SHIPPED   = 'shipped'
+    DELIVERED = 'delivered'
     CANCELED  = 'canceled'
+
 
     STATUS_CHOICES = [
         (PENDING,   'Pendiente de pago'),
         (PAID,      'Pagada'),
-        (FULFILLED, 'Enviada/Entregada'),
+        (SHIPPED,   'Enviada'),
+        (DELIVERED, 'Entregada'),
         (CANCELED,  'Cancelada'),
     ]
 
@@ -64,6 +67,19 @@ class Order(models.Model):
     payment_reference = models.CharField(max_length=255,
                                          blank=True,
                                          help_text="ID de la pasarela de pago")
+    
+    tracking_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Número de seguimiento proporcionado por el transportista"
+    )
+    tracking_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="URL para rastrear el envío en el sitio del transportista"
+    )
+
     created_at        = models.DateTimeField(auto_now_add=True)
     updated_at        = models.DateTimeField(auto_now=True)
 
